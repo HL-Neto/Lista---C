@@ -1,0 +1,210 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX 100
+
+// Definição básica dos elementos na lista
+typedef struct {
+    char nome[50];
+} Contato;
+
+typedef struct {
+    Contato vetor[MAX];
+    int ultimaPosicao;
+} Lista;
+
+// Criar lista vazia
+Lista criar() {
+    Lista lista;
+    lista.ultimaPosicao = -1;
+    return lista;
+}
+
+// Verificações básicas da lista
+int listaVazia(Lista *lista) {
+    return (lista->ultimaPosicao == -1);
+}
+
+int listaCheia(Lista *lista) {
+    return (lista->ultimaPosicao == MAX - 1);
+}
+
+int tamanhoAtualLista(Lista *lista) {
+    return lista->ultimaPosicao + 1;
+}
+
+int contatosRestantes(Lista *lista) {
+    return MAX - (lista->ultimaPosicao + 1);
+}
+
+// Manipulação de contatos
+void deslocamentoDireita(Lista *lista, int pos) {
+    for (int i = lista->ultimaPosicao + 1; i > pos; i--) {
+        lista->vetor[i] = lista->vetor[i - 1];
+    }
+}
+
+int buscaBinaria(Lista *lista, char nomeRequisitado[]) {
+    int i = 0;
+    int j = lista->ultimaPosicao;
+
+    while (i <= j) {  
+        int meio = (i + j) / 2;  
+        int comparacao = strcmp(lista->vetor[meio].nome, nomeRequisitado);
+
+        if (comparacao == 0) {
+            return meio;
+        } else if (comparacao < 0) { 
+            i = meio + 1;
+        } else { 
+            j = meio - 1;
+        }
+    }
+    return -1; 
+}
+
+int buscaSequencial(Lista *lista, char nomeRequisitado[]) {
+    int i = 0;
+    while (i <= lista->ultimaPosicao) {
+        if (strcmp(lista->vetor[i].nome, nomeRequisitado) == 0) {
+            return i;
+        }
+        i++;
+    }
+    return -1;
+}
+
+void removerContatoPorNome(Lista *lista, char nome[]) {
+    int indice = buscaSequencial(lista, nome);
+    if (indice != -1) {
+        for (int i = indice; i < lista->ultimaPosicao; i++) {
+            lista->vetor[i] = lista->vetor[i + 1];
+        }
+        lista->ultimaPosicao--;
+        printf("Contato removido com sucesso!\n");
+    } else {
+        printf("Contato não encontrado!\n");
+    }
+}
+
+void removerContatoPorPosicao(Lista *lista, int pos) {
+    if (pos < 0 || pos > lista->ultimaPosicao) {
+        printf("Posição inválida!\n");
+        return;
+    }
+    for (int i = pos; i < lista->ultimaPosicao; i++) {
+        lista->vetor[i] = lista->vetor[i + 1];
+    }
+    lista->ultimaPosicao--;
+    printf("Contato removido com sucesso!\n");
+}
+
+// Função principal
+int main() {
+    int resposta;
+    Lista novaLista = criar();
+
+    printf("O que você deseja fazer?: \n1. Criar Lista \n2. Sair\n");
+    scanf("%d", &resposta);
+
+    if (resposta == 1) {
+        printf("Lista criada!!\n");
+
+        do {
+            printf("\nO que você deseja fazer agora?:\n");
+            printf("1. Mostrar os contatos\n");
+            printf("2. Adicionar um contato à lista\n");
+            printf("3. Buscar e mostrar um contato\n");
+            printf("4. Apagar um contato (por nome)\n");
+            printf("5. Apagar um contato (por posição)\n");
+            printf("6. Mostrar a quantidade de contatos na lista\n");
+            printf("7. Mostrar limite máximo de contatos restantes na lista\n");
+            printf("8. Sair\n");
+
+            scanf("%d", &resposta);
+            getchar(); // Evita problemas com entrada de texto
+
+            switch (resposta) {
+                case 1:
+                    if (listaVazia(&novaLista)) {
+                        printf("A lista está vazia.\n");
+                    } else {
+                        for (int i = 0; i <= novaLista.ultimaPosicao; i++) {
+                            printf("%d. %s\n", i + 1, novaLista.vetor[i].nome);
+                        }
+                    }
+                    break;
+
+                case 2:
+                    if (listaCheia(&novaLista)) {
+                        printf("A lista está cheia e não dá para adicionar novos contatos!\n");
+                    } else {
+                        Contato novoContato;
+                        printf("Qual o nome do contato que você deseja adicionar?:\n");
+                        fgets(novoContato.nome, 50, stdin);
+                        novoContato.nome[strcspn(novoContato.nome, "\n")] = '\0';
+
+                        novaLista.vetor[++novaLista.ultimaPosicao] = novoContato;
+                        printf("Contato adicionado!\n");
+                    }
+                    break;
+
+                case 3: {
+                    printf("De que forma você deseja procurar esse contato?:\n1. Sequencial\n2. Binária\n");
+                    int opcaoBusca;
+                    scanf("%d", &opcaoBusca);
+                    getchar();
+
+                    char nomeRequisitado[50];  
+                    printf("Digite o nome do contato a ser buscado:\n");
+                    fgets(nomeRequisitado, 50, stdin);
+                    nomeRequisitado[strcspn(nomeRequisitado, "\n")] = '\0';
+
+                    int indice = (opcaoBusca == 1) ? buscaSequencial(&novaLista, nomeRequisitado) : buscaBinaria(&novaLista, nomeRequisitado);
+                    if (indice != -1) {
+                        printf("Contato encontrado na posição %d.\n", indice + 1);
+                    } else {
+                        printf("Contato não encontrado.\n");
+                    }
+                    break;
+                }
+
+                case 4: {
+                    char nome[50];
+                    printf("Digite o nome do contato a ser removido:\n");
+                    fgets(nome, 50, stdin);
+                    nome[strcspn(nome, "\n")] = '\0';
+                    removerContatoPorNome(&novaLista, nome);
+                    break;
+                }
+
+                case 5: {
+                    int pos;
+                    printf("Digite a posição do contato a ser removido:\n");
+                    scanf("%d", &pos);
+                    removerContatoPorPosicao(&novaLista, pos - 1);
+                    break;
+                }
+
+                case 6:
+                    printf("Quantidade de contatos na lista: %d\n", tamanhoAtualLista(&novaLista));
+                    break;
+
+                case 7:
+                    printf("A quantidade de contatos restantes é de: %d\n", contatosRestantes(&novaLista));
+                    break;
+
+                case 8:
+                    printf("Saindo...\n");
+                    break;
+
+                default:
+                    printf("Opção inválida.\n");
+            }
+        } while (resposta != 8);
+    } else {
+        printf("Saiu!\n");
+    }
+
+    return 0;
+}
